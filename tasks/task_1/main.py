@@ -1,5 +1,5 @@
-from tasks.root_reducer_enum import RootReducerEnum
-from tasks.task_1_constants import *
+from tasks.task_1.root_reducer_enum import RootReducerEnum
+from tasks.task_1.task_1_constants import *
 
 
 def print_start_info():

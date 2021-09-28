@@ -1,6 +1,6 @@
 from aenum import MultiValueEnum
 
-from tasks.root_reducer import *
+from tasks.task_1.root_reducer import *
 
 
 class RootReducerEnum(MultiValueEnum):

@@ -1,4 +1,4 @@
-from tasks.task_1_constants import *
+from tasks.task_1.task_1_constants import *
 
 
 class RootReducer:
