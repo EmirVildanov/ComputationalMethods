@@ -74,8 +74,8 @@ def start_interpolation_process_with_values(sorted_table_of_values, x_for_test):
 
     value_of_given_function_in_test_x = given_function(x_for_test)
     print(f"Value of given function at {x_for_test} is {value_of_given_function_in_test_x}")
-    print(f"Newton interpolated value at {x_for_test} is {newton_interpolated_value}.")
-    print(f"Lagrange interpolated value at {x_for_test} is {lagrange_interpolated_value}.")
+    print(f"Newton interpolated value at {x_for_test} is {newton_interpolated_value}")
+    print(f"Lagrange interpolated value at {x_for_test} is {lagrange_interpolated_value}")
     print(
         f"Absolute value of Newton method discrepancy: {abs(newton_interpolated_value - value_of_given_function_in_test_x)}")
     print(
@@ -90,6 +90,12 @@ def start_interpolation_process_with_values(sorted_table_of_values, x_for_test):
         plt.plot(given_x, given_y, 'bo')
         plt.plot(given_x_range, y_linearized)
         plt.show()
+
+
+def print_table_values(table):
+    print("x\t->\tf(x):")
+    for pair in table:
+        print(f"{pair[0]}\t->\t{pair[1]}")
 
 
 if __name__ == "__main__":
@@ -107,7 +113,7 @@ if __name__ == "__main__":
         table_of_values = [(x, given_function(x)) for x in [formula_for_x_i(i, m) for i in range(0, m)]]
         print(f"Number of values: {m + 1}")
         print("Table of values:")
-        pprint(table_of_values)
+        print_table_values(table_of_values)
         print()
 
         x_for_test = float(input("Enter point's x you want to interpolate: "))
@@ -121,7 +127,7 @@ if __name__ == "__main__":
 
         sorted_table_of_values = sorted(table_of_values, key=lambda pair: abs(pair[0] - x_for_test))[0:n]
         print("Sorted table of values: ")
-        pprint(sorted_table_of_values)
+        print_table_values(sorted_table_of_values)
         print()
 
         start_interpolation_process_with_values(sorted_table_of_values, x_for_test)
