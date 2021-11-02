@@ -1,10 +1,12 @@
 import warnings
 from pprint import pprint
 
-from task_2_constants import *
+from tasks.task_2.task_2_constants import *
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+from tasks.utils.handsome_printer import print_table_values
 
 plt.style.use('seaborn-poster')
 
@@ -14,6 +16,7 @@ def print_task_info():
     print("Variant 2")
     print(f"a: {a}")
     print(f"b: {b}")
+    print()
 
 
 def find_divided_diff(x_array, y_array):
@@ -92,26 +95,20 @@ def start_interpolation_process_with_values(sorted_table_of_values, x_for_test):
         plt.show()
 
 
-def print_table_values(table):
-    print("x\t->\tf(x):")
-    for pair in table:
-        print(f"{pair[0]}\t->\t{pair[1]}")
-
-
 if __name__ == "__main__":
     print_task_info()
     user_input = input("If you want to start program, enter 'start'. Otherwise enter 'exit': ")
 
-    m = 15
-    x_for_test = 0.35
-    n = 7
+    # m = 15
+    # x_for_test = 0.35
+    # n = 7
 
     while user_input.strip() != "exit":
         number_of_values = int(input("Enter the number of values in the table: "))
         m = number_of_values - 1
 
-        table_of_values = [(x, given_function(x)) for x in [formula_for_x_i(i, m) for i in range(0, m)]]
         print(f"Number of values: {m + 1}")
+        table_of_values = [(x, given_function(x)) for x in [formula_for_x_i(i, m) for i in range(0, number_of_values)]]
         print("Table of values:")
         print_table_values(table_of_values)
         print()

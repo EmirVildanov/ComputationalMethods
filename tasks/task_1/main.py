@@ -11,24 +11,26 @@ def print_start_info():
     print()
 
 
-def find_equation_root_segments():
+def find_equation_root_segments(function, A, B, h, print_info=True):
     root_segments = []
     counter = 0
     x1 = A
     x2 = x1 + h
-    y1 = equation_function(x1)
+    y1 = function(x1)
     while x2 <= B:
-        y2 = equation_function(x2)
+        y2 = function(x2)
         if y1 * y2 <= 0:
             counter += 1
             current_root_segment = (x1, x2)
             root_segments.append(current_root_segment)
-            print(f"Current root segment: {current_root_segment}")
+            if print_info:
+                print(f"Current root segment: {current_root_segment}")
         x1 = x2
         x2 = x1 + h
         y1 = y2
-    print(f"Root segments number: {counter}")
-    print()
+    if print_info:
+        print(f"Root segments number: {counter}")
+        print()
     return root_segments
 
 
@@ -41,7 +43,7 @@ def start_interactive_evaluation():
         try:
             chosen_reducer = RootReducerEnum(int(input("Enter number: ")))
             print()
-            for root_segment in find_equation_root_segments():
+            for root_segment in find_equation_root_segments(equation_function, A, B, h):
                 chosen_reducer.values[0].evaluate(root_segment)
         except ValueError:
             print("Exiting program")
@@ -49,7 +51,7 @@ def start_interactive_evaluation():
 
 
 def start_simple_evaluation():
-    for root_segment in find_equation_root_segments():
+    for root_segment in find_equation_root_segments(equation_function, A, B, h):
         print(f"WORKING ON SEGMENT {root_segment}:")
         for reducer in list(RootReducerEnum):
             reducer.values[0].evaluate(root_segment)
