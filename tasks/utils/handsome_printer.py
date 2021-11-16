@@ -7,6 +7,12 @@ def print_red(text):
     print(f"{WARNING}{text}{ENDC}")
 
 
+def print_green(text):
+    GOOD = '\033[92m'
+    ENDC = '\033[0m'
+    print(f"{GOOD}{text}{ENDC}")
+
+
 def print_table_values(table):
     table_rows = []
     header_row = ["x", "f(x)"]
