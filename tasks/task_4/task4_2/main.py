@@ -1,34 +1,19 @@
 import random
 from enum import Enum, auto
-from typing import Tuple, Callable
+from typing import Tuple
 
 import numpy as np
 import sympy
-
-from sympy import lambdify, solve, sin, sympify
+from sympy import lambdify, solve
 
 from tasks.task_4.task_4_constants import Polynomial, polinomial_of_0_degree, polinomial_of_1_degree, \
     polinomial_of_2_degree, polinomial_of_3_degree
+from tasks.task_4.utils import float64, Method, x_symbol, weight_function_lambda, find_h, print_method_info
 from tasks.utils.calculation import find_absolute_discrepancy_value, get_function
 from tasks.utils.handsome_printer import print_red, print_green
 
-weight_function_expression, weight_function_lambda = get_function("1")
-x_symbol = sympy.Symbol('x')
 
-def find_h(a: int, b: int, m: int):
-    return (b - a) / m
-
-
-def integral_of_function_multiplication():
-    function_expression, function_lambda = get_function("")
-    whole = f"({function_expression}) * ({function_expression})".replace("e", "E")
-    result = sympy.sympify(whole)
-    integral = result.integrate((x_symbol, 0, 1))
-    print(f"Integral: {integral}")
-
-
-def left_rectangle_method(function_lambda, weight_function_lambda, a: np.float32, h: np.float32, m: int) -> \
-        Tuple[np.float32, np.float32]:
+def left_rectangle_method(function_lambda, weight_function_lambda, a: np.float64, h: np.float64, m: int) -> Tuple[np.float64, np.float64]:
     sum = 0
     alfa = a
 
@@ -42,28 +27,26 @@ def left_rectangle_method(function_lambda, weight_function_lambda, a: np.float32
     return result, sum
 
 
-def right_rectangle_method(function, weight_function, a: np.float32, h: np.float32, m: int, w: np.float32) -> Tuple[
-    np.float32]:
+def right_rectangle_method(function, weight_function, a: np.float64, h: np.float64, m: int, w: np.float64) -> np.float64:
     alfa = a + h
 
     return h * (w + function(alfa + m * h) * weight_function(alfa + m * h))
 
 
-def middle_rectangle_method(function, weight_function, a: np.float32, h: np.float32, m: int) -> \
-        Tuple[np.float32, np.float32]:
+def middle_rectangle_method(function, weight_function, a: np.float64, h: np.float64, m: int) -> Tuple[np.float64, np.float64]:
     alfa = a + h / 2
     sum = 0
 
     for j in range(0, m):
-        sum += function(alfa + j * h + h / 2) * weight_function(alfa + j * h + h / 2)
+        sum += function(alfa + j * h) * weight_function(alfa + j * h)
     result = h * sum
 
     # sum = q
     return result, sum
 
 
-def trapezoid_method(function, weight_function, a: np.float32, h: np.float32, m: int, w: np.float32) -> \
-        Tuple[np.float32, np.float32]:
+def trapezoid_method(function, weight_function, a: np.float64, h: np.float64, m: int, w: np.float64) -> \
+        Tuple[np.float64, np.float64]:
     alfa = a
     f_0 = function(alfa) * weight_function(alfa)
     f_m = function(alfa + m * h) * weight_function(alfa + m * h)
@@ -72,25 +55,12 @@ def trapezoid_method(function, weight_function, a: np.float32, h: np.float32, m:
     return (h / 2) * (f_0 + f_m + 2 * w), f_0 + f_m
 
 
-def simpsons_method(h: np.float32, z: np.float32, w: np.float32,
-                    q: np.float32) -> np.float32:
+def simpsons_method(h: np.float64, z: np.float64, w: np.float64,
+                    q: np.float64) -> np.float64:
     return (h / 6) * (z + 2 * w + 4 * q)
 
 
-def print_method_info(J, actual, theoretical_discrepancy):
-    print(f"Value: {actual}")
-    actual_absolute_discrepancy = find_absolute_discrepancy_value(J, actual)
-    print(f"Absolute values of discrepancy: {actual_absolute_discrepancy}")
-    print(f"Theoretical discrepancy: {theoretical_discrepancy}")
-    print(
-        f"Discrepancies' diff: {find_absolute_discrepancy_value(actual_absolute_discrepancy, theoretical_discrepancy)}")
-
-
-def precise_float(number) -> np.float32:
-    return np.float32(number)
-
-
-def find_absolute_maximum_on_segment(function, arg, a: np.float32, b: np.float32):
+def find_absolute_maximum_on_segment(function, arg, a: np.float64, b: np.float64):
     class DotType(Enum):
         MAX = auto()
         MIN = auto()
@@ -130,26 +100,26 @@ def find_absolute_maximum_on_segment(function, arg, a: np.float32, b: np.float32
     absolute_maximum_pretenders.append(b)
 
     lambda_f = lambdify("x", function.as_expr())
-    maximum_values = [abs(lambda_f(absolute_maximum)) for absolute_maximum in absolute_maximum_pretenders]
+    maximum_values = [abs(lambda_f(float(absolute_maximum))) for absolute_maximum in absolute_maximum_pretenders]
     return max(maximum_values)
 
 
-def find_d_diff_of_function(function, d):
+def find_d_diff_of_function(function, d: int):
     current_diff = function
     for i in range(0, d):
         current_diff = current_diff.diff(x_symbol)
     return current_diff
 
 
-def find_theoretical_discrepancy(function, const, degree_of_accuracy, a, b, h):
+def find_theoretical_discrepancy(function, const, degree_of_accuracy, a: np.float64, b: np.float64, h):
     # d - algebraic_degree_of_accuracy
     M = find_absolute_maximum_on_segment(find_d_diff_of_function(function, degree_of_accuracy + 1), x_symbol,
                                          a, b)
     return const * M * (b - a) * pow(h, degree_of_accuracy + 1)
 
 
-def find_integral_values_on_function(function_lambda, weight_function_lambda, a, b, m):
-    h = precise_float(find_h(a, b, m))
+def find_integral_values_on_function(function_lambda, weight_function_lambda, a: np.float64, b: np.float64, m):
+    h = float64(find_h(a, b, m))
     value_left, w = left_rectangle_method(function_lambda, weight_function_lambda, a, h, m)
     value_right = right_rectangle_method(function_lambda, weight_function_lambda, a, h, m, w)
     value_middle, q = middle_rectangle_method(function_lambda, weight_function_lambda, a, h, m)
@@ -158,16 +128,14 @@ def find_integral_values_on_function(function_lambda, weight_function_lambda, a,
     return value_left, value_right, value_middle, value_trapezoid, value_simpsons
 
 
-class Method:
-    def __init__(self, method: Callable, name):
-        self.method = method
-        self.name = name
-
-
 def test_polynomial(polynomial: Polynomial, degree_of_accuracy: int) -> bool:
-    epsilon = pow(10, -7)
+    epsilon = float64(pow(10, -7))
     a = random.uniform(-100, 100)
     b = random.uniform(-100, 100)
+
+    # a = float64(-10)
+    # b = float64(10)
+
     m = pow(10, 5)
     expected = polynomial.integral(b) - polynomial.integral(a)
     values = find_integral_values_on_function(polynomial.polynomial_lambda, weight_function_lambda, a, b, m)
@@ -183,7 +151,7 @@ def test_polynomial(polynomial: Polynomial, degree_of_accuracy: int) -> bool:
         current_actual = values[i]
         discrepancy = find_absolute_discrepancy_value(current_actual, expected)
         if discrepancy > epsilon:
-            print_red(f"Test failed on {i}. Discrepancy = {discrepancy} ")
+            print(f"Test failed on {i}. Poly: {polynomial.string} Expected = {expected} Actual = {current_actual} Discrepancy = {discrepancy} ")
             return False
     print_green(f"Test passed")
     return True
@@ -192,10 +160,10 @@ def test_polynomial(polynomial: Polynomial, degree_of_accuracy: int) -> bool:
 if __name__ == "__main__":
     user_input = ""
 
-    a = precise_float(0)
-    b = precise_float(1)
-    function_expression, function_lambda = get_function("x**2")
-    m = pow(1, 1)
+    a = float64(-10)
+    b = float64(10)
+    function_expression, function_lambda = get_function("x**5")
+    m = pow(10, 5)
 
     while user_input.strip() != "exit":
         # a = get_precise_float(float(input("Enter A: ")))
@@ -215,7 +183,7 @@ if __name__ == "__main__":
         # while m <= 0:
         #     m = int(input("m must be greater than 0. Try again: "))
 
-        J = precise_float(sympy.integrate(function_expression, (x_symbol, a, b)))
+        J = float64(sympy.integrate(function_expression, (x_symbol, a, b)))
         print(f"Exact value of easily integrated function from a to b: {J}")
 
         methods = [
@@ -231,12 +199,12 @@ if __name__ == "__main__":
             function_lambda, weight_function_lambda, a, b, m)
 
         function = sympy.sympify(function_expression)
-        h = precise_float(find_h(a, b, m))
-        theoretical_discrepancy_left = find_theoretical_discrepancy(function, 1 / 2, 0, a, b, h)
-        theoretical_discrepancy_right = find_theoretical_discrepancy(function, 1 / 2, 0, a, b, h)
-        theoretical_discrepancy_middle = find_theoretical_discrepancy(function, 1 / 12, 1, a, b, h)
-        theoretical_discrepancy_trapezoid = find_theoretical_discrepancy(function, 1 / 24, 1, a, b, h)
-        theoretical_discrepancy_simpsons = find_theoretical_discrepancy(function, 1 / 2880, 1, a, b, h)
+        h = float64(find_h(a, b, m))
+        theoretical_discrepancy_left = find_theoretical_discrepancy(function, float64(1 / 2), 0, a, b, h)
+        theoretical_discrepancy_right = find_theoretical_discrepancy(function, float64(1 / 2), 0, a, b, h)
+        theoretical_discrepancy_middle = find_theoretical_discrepancy(function, float64(1 / 12), 1, a, b, h)
+        theoretical_discrepancy_trapezoid = find_theoretical_discrepancy(function, float64(1 / 24), 1, a, b, h)
+        theoretical_discrepancy_simpsons = find_theoretical_discrepancy(function, float64(1 / 2880), 1, a, b, h)
 
         method_values = [value_left, value_right, value_middle, value_trapezoid, value_simpsons]
         method_theoretical_discrepancies = [theoretical_discrepancy_left, theoretical_discrepancy_right,

@@ -1,3 +1,4 @@
+import numpy as np
 from sympy import parse_expr, lambdify
 
 from tasks.task_4.task4_2.task4_2_constants import DEFAULT_FUNCTION_VALUE
