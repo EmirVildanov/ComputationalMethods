@@ -52,9 +52,13 @@ class Method:
 
 
 def test_polynomial(polynomial: Polynomial, methods: List[Method]) -> bool:
-    epsilon = pow(10, -15)
-    a = random.uniform(-100, 100)
-    b = random.uniform(-100, 100)
+    epsilon = pow(10, -20)
+    # a = random.uniform(-100, 100)
+    # b = random.uniform(-100, 100)
+    # while b < a:
+    #     b = random.uniform(-100, 100)
+    a = 0
+    b = 1
     expected = polynomial.integral(b) - polynomial.integral(a)
     for method in methods:
         current_actual = method.method(polynomial.polynomial_lambda, a, b)
@@ -71,8 +75,10 @@ if __name__ == "__main__":
 
     user_input = ""
     while user_input.strip() != "exit":
-        a = float(input("Enter a: "))
-        b = float(input("Enter b: "))
+        # a = float(input("Enter a: "))
+        # b = float(input("Enter b: "))
+        a = -10
+        b = 13
 
         # the grater (b - a) the greater the value of absolute discrepancy
 
@@ -110,4 +116,6 @@ if __name__ == "__main__":
         test_polynomial(polinomial_of_3_degree, methods_with_3_degree_of_accuracy)
         print()
 
+        a = float(1.13456789012345678)
+        print(a)
         user_input = input("If you want to start program, enter 'start'. Otherwise enter 'exit': ")

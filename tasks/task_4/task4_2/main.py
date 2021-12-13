@@ -4,8 +4,10 @@ from typing import Tuple
 
 import numpy as np
 import sympy
-from sympy import lambdify, solve
+from scipy.optimize import minimize_scalar
+from sympy import lambdify, solve, diff
 
+from tasks.task_4.task4_1.main import print_task_info
 from tasks.task_4.task_4_constants import Polynomial, polinomial_of_0_degree, polinomial_of_1_degree, \
     polinomial_of_2_degree, polinomial_of_3_degree
 from tasks.task_4.utils import float64, Method, x_symbol, weight_function_lambda, find_h, print_method_info
@@ -104,17 +106,28 @@ def find_absolute_maximum_on_segment(function, arg, a: np.float64, b: np.float64
     return max(maximum_values)
 
 
-def find_d_diff_of_function(function, d: int):
-    current_diff = function
-    for i in range(0, d):
+def find_d_diff_of_function(function_expression, d: int):
+    current_diff = function_expression
+    for i in range(0, d + 1):
         current_diff = current_diff.diff(x_symbol)
     return current_diff
 
 
-def find_theoretical_discrepancy(function, const, degree_of_accuracy, a: np.float64, b: np.float64, h):
+def find_theoretical_discrepancy(function_expression, const, degree_of_accuracy, a: np.float64, b: np.float64, h):
+    def minimize(f, a, b):
+        res = minimize_scalar(f, bounds=(a, b))
+        if not res.success:
+            raise Exception(f"Failed to minimize function {res}")
+        return res.x, f(res.x)
+
+    def maximize(f, a, b):
+        x, y = minimize(lambda x: -f(x), a, b)
+        return x, -y
+
     # d - algebraic_degree_of_accuracy
-    M = find_absolute_maximum_on_segment(find_d_diff_of_function(function, degree_of_accuracy + 1), x_symbol,
-                                         a, b)
+    d_diff_of_func = find_d_diff_of_function(function_expression, degree_of_accuracy + 1)
+    M = find_absolute_maximum_on_segment(d_diff_of_func, x_symbol, a, b)
+    # M = maximize(lambdify(x_symbol, d_diff_of_func), a, b)[1]
     return const * M * (b - a) * pow(h, degree_of_accuracy + 1)
 
 
@@ -129,13 +142,11 @@ def find_integral_values_on_function(function_lambda, weight_function_lambda, a:
 
 
 def test_polynomial(polynomial: Polynomial, degree_of_accuracy: int) -> bool:
-    epsilon = float64(pow(10, -7))
-    a = random.uniform(-100, 100)
-    b = random.uniform(-100, 100)
-
-    # a = float64(-10)
-    # b = float64(10)
-
+    epsilon = pow(10, -12)
+    # a = random.uniform(-100, 100)
+    # b = random.uniform(a, 100)
+    a = 0
+    b = 1
     m = pow(10, 5)
     expected = polynomial.integral(b) - polynomial.integral(a)
     values = find_integral_values_on_function(polynomial.polynomial_lambda, weight_function_lambda, a, b, m)
@@ -151,81 +162,71 @@ def test_polynomial(polynomial: Polynomial, degree_of_accuracy: int) -> bool:
         current_actual = values[i]
         discrepancy = find_absolute_discrepancy_value(current_actual, expected)
         if discrepancy > epsilon:
-            print(f"Test failed on {i}. Poly: {polynomial.string} Expected = {expected} Actual = {current_actual} Discrepancy = {discrepancy} ")
+            print(f"Test failed on {i}. a: {a}, b: {b}, Poly: {polynomial.string}, Discrepancy = {discrepancy} ")
             return False
     print_green(f"Test passed")
     return True
 
 
+def start_process(a, b, m, function_expression, function_lambda):
+    J = float(sympy.integrate(function_expression, (x_symbol, a, b)))
+    print(f"Exact value of easily integrated function from a to b: {J}")
+
+    methods = [
+        Method(left_rectangle_method, "Left rectangle method"),
+        Method(right_rectangle_method, "Right rectangle method"),
+        Method(middle_rectangle_method, "Middle rectangle method"),
+        Method(trapezoid_method, "Trapezoid method"),
+        Method(simpsons_method, "Simpson method"),
+    ]
+
+    print("Approximated values of easily integrated function from a to b:")
+    value_left, value_right, value_middle, value_trapezoid, value_simpsons = find_integral_values_on_function(
+        function_lambda, weight_function_lambda, a, b, m)
+
+    h = float64(find_h(a, b, m))
+    theoretical_discrepancy_left = find_theoretical_discrepancy(function_expression, float64(1 / 2), 0, a, b, h)
+    theoretical_discrepancy_right = find_theoretical_discrepancy(function_expression, float64(1 / 2), 0, a, b, h)
+    theoretical_discrepancy_middle = find_theoretical_discrepancy(function_expression, float64(1 / 12), 1, a, b, h)
+    theoretical_discrepancy_trapezoid = find_theoretical_discrepancy(function_expression, float64(1 / 24), 1, a, b, h)
+    theoretical_discrepancy_simpsons = find_theoretical_discrepancy(function_expression, float64(1 / 2880), 3, a, b, h)
+
+    method_values = [value_left, value_right, value_middle, value_trapezoid, value_simpsons]
+    method_theoretical_discrepancies = [theoretical_discrepancy_left, theoretical_discrepancy_right,
+                                        theoretical_discrepancy_middle, theoretical_discrepancy_trapezoid,
+                                        theoretical_discrepancy_simpsons]
+
+    for method, value, theoretical_discrepancy in zip(methods, method_values, method_theoretical_discrepancies):
+        print_red(f"-------{method.name}-------")
+        print_method_info(J, value, theoretical_discrepancy)
+    print()
+
+    print("Tests on polynomials:")
+    test_polynomial(polinomial_of_0_degree, 0)
+    test_polynomial(polinomial_of_1_degree, 1)
+    test_polynomial(polinomial_of_2_degree, 3)
+    test_polynomial(polinomial_of_3_degree, 3)
+    print()
+
+
 if __name__ == "__main__":
+    print_task_info()
     user_input = ""
 
-    a = float64(-10)
-    b = float64(10)
-    function_expression, function_lambda = get_function("x**5")
-    m = pow(10, 5)
+    a = float(0)
+    b = float(1)
+    function_expression, function_lambda = get_function("x ** 3 + 2550")
+    m = 50000
 
     while user_input.strip() != "exit":
-        # a = get_precise_float(float(input("Enter A: ")))
-        # b = get_precise_float(float(input("Enter B: ")))
+        # a = float(input("Enter A: "))
+        # b = float(input("Enter B: "))
         # while b <= a:
         #     b = int(input("b must be greater than a. Try again: "))
-        #
-        # print("Now choose your function:")
-        # print("1 -> e^x")
-        # print("2 -> 5*x + sin(5*x) + 1")
-        # print("3 -> ")
-        # print("Enter the number of function to choose:")
         # function_expression, function_lambda = get_function(input("Enter function: "))
         # weight_function_expression, weight_function_lambda = get_function("1")
-        #
         # m = int(input("Enter m: "))
         # while m <= 0:
         #     m = int(input("m must be greater than 0. Try again: "))
-
-        J = float64(sympy.integrate(function_expression, (x_symbol, a, b)))
-        print(f"Exact value of easily integrated function from a to b: {J}")
-
-        methods = [
-            Method(left_rectangle_method, "Left rectangle method"),
-            Method(right_rectangle_method, "Right rectangle method"),
-            Method(middle_rectangle_method, "Middle rectangle method"),
-            Method(trapezoid_method, "Trapezoid method"),
-            Method(simpsons_method, "Simpson method"),
-        ]
-
-        print("Approximated values of easily integrated function from a to b:")
-        value_left, value_right, value_middle, value_trapezoid, value_simpsons = find_integral_values_on_function(
-            function_lambda, weight_function_lambda, a, b, m)
-
-        function = sympy.sympify(function_expression)
-        h = float64(find_h(a, b, m))
-        theoretical_discrepancy_left = find_theoretical_discrepancy(function, float64(1 / 2), 0, a, b, h)
-        theoretical_discrepancy_right = find_theoretical_discrepancy(function, float64(1 / 2), 0, a, b, h)
-        theoretical_discrepancy_middle = find_theoretical_discrepancy(function, float64(1 / 12), 1, a, b, h)
-        theoretical_discrepancy_trapezoid = find_theoretical_discrepancy(function, float64(1 / 24), 1, a, b, h)
-        theoretical_discrepancy_simpsons = find_theoretical_discrepancy(function, float64(1 / 2880), 1, a, b, h)
-
-        method_values = [value_left, value_right, value_middle, value_trapezoid, value_simpsons]
-        method_theoretical_discrepancies = [theoretical_discrepancy_left, theoretical_discrepancy_right,
-                                            theoretical_discrepancy_middle, theoretical_discrepancy_trapezoid,
-                                            theoretical_discrepancy_simpsons]
-
-        for method, value, theoretical_discrepancy in zip(methods, method_values, method_theoretical_discrepancies):
-            print_red(f"-------{method.name}-------")
-            print_method_info(J, value, theoretical_discrepancy)
-        print()
-
-        methods_with_0_degree_of_accuracy = methods
-        methods_with_1_degree_of_accuracy = methods[2:]
-        methods_with_3_degree_of_accuracy = methods[4:]
-
-        print("Tests on polynomials:")
-
-        test_polynomial(polinomial_of_0_degree, 0)
-        test_polynomial(polinomial_of_1_degree, 1)
-        test_polynomial(polinomial_of_2_degree, 3)
-        test_polynomial(polinomial_of_3_degree, 3)
-        print()
-
+        start_process(a, b, m, function_expression, function_lambda)
         user_input = input("If you want to start program, enter 'start'. Otherwise enter 'exit': ")

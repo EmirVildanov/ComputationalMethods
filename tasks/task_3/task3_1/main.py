@@ -1,5 +1,4 @@
 import warnings
-from random import shuffle
 
 import numpy as np
 from matplotlib import pyplot as plt

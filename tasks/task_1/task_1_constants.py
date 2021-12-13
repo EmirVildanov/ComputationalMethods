@@ -20,5 +20,5 @@ A = -5
 B = 10
 N = pow(10, 3)
 h = find_h(N, A, B)
-epsilon = pow(10, -7)
+epsilon = pow(10, -12)
 equation_function_string_view = "2^(-x) - sin(x)"
